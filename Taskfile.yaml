@@ -1,0 +1,14 @@
+version: 3
+
+tasks:
+  build:
+    desc: Builds the Excalidraw Docker image
+    cmd: docker build -t excalidraw .
+
+  start:
+    desc: Run docker compose up
+    cmd: docker compose up
+
+  stop:
+    desc: Run docker compose down
+    cmd: docker compose down

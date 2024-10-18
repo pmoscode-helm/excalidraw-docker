@@ -1,0 +1,30 @@
+services:
+  excalidraw-collab-server:
+    image: pmoscode/excalidraw-collab-server
+    container_name: excalidraw-collab-server
+    ports:
+      - "3002:3002"
+    restart: on-failure
+    networks:
+      excalidraw-net:
+
+  excalidraw:
+    build:
+      context: .
+    container_name: excalidraw
+    ports:
+      - "3000:80"
+    restart: on-failure
+    networks:
+      excalidraw-net:
+    volumes:
+      - ./:/opt/node_app/app:delegated
+      - ./package.json:/opt/node_app/package.json
+      - ./yarn.lock:/opt/node_app/yarn.lock
+      - notused:/opt/node_app/app/node_modules
+
+volumes:
+  notused:
+
+networks:
+  excalidraw-net:
