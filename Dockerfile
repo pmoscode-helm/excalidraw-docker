@@ -10,7 +10,7 @@ RUN yarn --network-timeout 600000
 
 RUN yarn build:app:docker
 
-FROM nginx:1.27-alpine
+FROM nginx:1.29-alpine
 
 ENV APP_WS_OLD_SERVER_URL="https://oss-collab.excalidraw.com"
 ENV APP_WS_NEW_SERVER_URL="http://localhost:3002"
