@@ -1,6 +1,6 @@
 services:
   excalidraw-collab-server:
-    image: pmoscode/excalidraw-collab-server:dev
+    image: pmoscode/excalidraw-collab-server:latest
     container_name: excalidraw-collab-server
     ports:
       - "3002:3002"
