@@ -78,7 +78,11 @@ jobs:
             # When no tag in Docker Hub exists → build
             if [[ -z "$TAG_HUB" ]]; then
               should_build=true
-            elif dpkg --compare-versions "$TAG_REPO" gt "$TAG_HUB"; then
+            else
+              TAG_HUB_TRIMMED="${TAG_HUB#v}"
+              TAG_REPO_TRIMMED="${TAG_REPO#v}"
+              
+              if dpkg --compare-versions "$TAG_REPO_TRIMMED" gt "$TAG_HUB_TRIMMED"; then
               should_build=true
             fi
           fi
