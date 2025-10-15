@@ -8,6 +8,8 @@ COPY ./excalidraw .
 # Error: Cannot find module @rollup/rollup-linux-x64-gnu
 RUN yarn --network-timeout 600000
 
+ARG NODE_ENV=production
+
 RUN yarn build:app:docker
 
 FROM nginx:1.29-alpine
