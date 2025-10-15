@@ -95,6 +95,8 @@ jobs:
         id: release
         if: steps.compare.outputs.should_build == 'true'
         run: |
+          TAG="${{ steps.submodule.outputs.latest_tag }}"
+          
           ./build-images.sh --push --only-release --tag "$TAG" 
           echo release_tag=$TAG >> $GITHUB_OUTPUT
 
