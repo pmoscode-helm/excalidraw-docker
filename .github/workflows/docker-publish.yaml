@@ -18,6 +18,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: pmoscode/excalidraw
+      SUBMODULE_PATH: excalidraw
+
     steps:
       - name: Checkout repo with submodules
         uses: actions/checkout@v5
