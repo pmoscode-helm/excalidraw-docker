@@ -32,6 +32,7 @@ jobs:
           LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
           
           echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Found latest tag: $LATEST_TAG"
 
       - name: Get current Docker Hub latest tag
         id: hub
