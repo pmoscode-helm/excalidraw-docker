@@ -20,6 +20,7 @@ PUSH=false
 ONLY_NIGHTLY=false
 ONLY_RELEASE=false
 SPECIFIED_TAG=""
+NO_LATEST=false
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -39,8 +40,9 @@ while [[ $# -gt 0 ]]; do
     --submodule) SUBMODULE_PATH="$2"; shift ;;
     --image) IMAGE_NAME="$2"; shift ;;
     --dockerfile) DOCKERFILE="$2"; shift ;;
+    --no-latest-tag) NO_LATEST="$2"; shift ;;
     -h|--help)
-      echo "Usage: $0 [--push] [--only-nightly|--only-release] [--tag TAG] [--submodule PATH] [--image NAME] [--dockerfile FILE]"
+      echo "Usage: $0 [--push] [--only-nightly|--only-release] [--tag TAG] [--submodule PATH] [--image NAME] [--dockerfile FILE] [--no-latest-tag]"
       exit 0
       ;;
     *) err "Unknown argument: $1" ;;
@@ -111,7 +113,9 @@ if ! $ONLY_NIGHTLY; then
   popd >/dev/null
 
   build_image "$LATEST_TAG"
-  build_image "latest"
+  if ! $NO_LATEST; then
+    build_image "latest"
+  fi
 
   # Restore original state
   pushd "$SUBMODULE_PATH" >/dev/null

@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: "0 3 * * *"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Optional: Tag to build'
+        required: false
+      latest:
+        description: Should push latest tag
+        required: false
+        type: boolean
 
 jobs:
   build:
@@ -14,6 +22,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           submodules: recursive
+          fetch-depth: 0
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
@@ -29,10 +38,14 @@ jobs:
         run: |
           cd "$SUBMODULE_PATH"
           git fetch --tags --quiet
-          LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
+          if [[ -n "${{ github.event.inputs.tag }}" ]]; then
+            LATEST_TAG="${{ github.event.inputs.tag }}"
+          else
+            LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
+          fi
           
           echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
-          echo "Found latest tag: $LATEST_TAG"
+          echo "Using tag: $LATEST_TAG"
 
       - name: Get current Docker Hub latest tag
         id: hub
@@ -52,11 +65,15 @@ jobs:
           TAG_HUB="${{ steps.hub.outputs.hub_tag }}"
           should_build=false
 
-          # When no tag in Docker Hub exists → build
-          if [[ -z "$TAG_HUB" ]]; then
+          if [[ -n "${{ github.event.inputs.tag }}" ]]; then
             should_build=true
-          elif dpkg --compare-versions "$TAG_REPO" gt "$TAG_HUB"; then
-            should_build=true
+          else
+            # When no tag in Docker Hub exists → build
+            if [[ -z "$TAG_HUB" ]]; then
+              should_build=true
+            elif dpkg --compare-versions "$TAG_REPO" gt "$TAG_HUB"; then
+              should_build=true
+            fi
           fi
 
           echo "should_build=$should_build" >> "$GITHUB_OUTPUT"
@@ -68,6 +85,25 @@ jobs:
           ./build-images.sh --push --only-nightly
 
       - name: Conditionally build latest/tag images
+        id: release
         if: steps.compare.outputs.should_build == 'true'
         run: |
-          ./build-images.sh --push --only-release
+          ./build-images.sh --push --only-release --tag "$TAG" 
+          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Tag current repo with same version
+        if: steps.release.outputs.release_tag != ''
+        run: |
+          TAG="${{ steps.release.outputs.release_tag }}"
+          
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG exists. Not tagging again..."
+          else
+            echo "Tagging current repo with $TAG"
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+            git tag -f "$TAG"
+            git push origin "$TAG" --force
+           fi
