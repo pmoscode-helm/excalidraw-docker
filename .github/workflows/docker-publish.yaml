@@ -12,6 +12,7 @@ on:
         description: Should push latest tag
         required: false
         type: boolean
+        default: true
 
 jobs:
   build:
