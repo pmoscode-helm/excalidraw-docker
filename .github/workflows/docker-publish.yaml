@@ -41,11 +41,13 @@ jobs:
           git fetch --tags --quiet
           if [[ -n "${{ github.event.inputs.tag }}" ]]; then
             LATEST_TAG="${{ github.event.inputs.tag }}"
+            echo "Using provided tag: $LATEST_TAG"
           else
             LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
+            echo "Using determined tag: $LATEST_TAG"
           fi
           
-          echo "latest_tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo latest_tag=$LATEST_TAG >> $GITHUB_OUTPUT
           echo "Using tag: $LATEST_TAG"
 
       - name: Get current Docker Hub latest tag
@@ -54,7 +56,7 @@ jobs:
           HUB_TAG=$(curl -fsSL "https://hub.docker.com/v2/repositories/${IMAGE_NAME}/tags/?page_size=100" \
             | jq -r '.results[].name' | grep -E '^v?[0-9]+\.[0-9]+' | sort -Vr | head -n1 || true)
           
-          echo "hub_tag=$HUB_TAG" >> "$GITHUB_OUTPUT"
+          echo hub_tag=$HUB_TAG >> $GITHUB_OUTPUT
           
           echo "Current tag on Docker Hub: $HUB_TAG"
           echo "Latest tag in repo: ${{ steps.submodule.outputs.latest_tag }}"
@@ -77,7 +79,7 @@ jobs:
             fi
           fi
 
-          echo "should_build=$should_build" >> "$GITHUB_OUTPUT"
+          echo should_build=$should_build >> $GITHUB_OUTPUT
           echo "Decision: should_build=$should_build"
 
       - name: Always build and push nightly
@@ -90,7 +92,7 @@ jobs:
         if: steps.compare.outputs.should_build == 'true'
         run: |
           ./build-images.sh --push --only-release --tag "$TAG" 
-          echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+          echo release_tag=$TAG >> $GITHUB_OUTPUT
 
       - name: Tag current repo with same version
         if: steps.release.outputs.release_tag != ''
@@ -107,4 +109,4 @@ jobs:
           
             git tag -f "$TAG"
             git push origin "$TAG" --force
-           fi
+          fi
