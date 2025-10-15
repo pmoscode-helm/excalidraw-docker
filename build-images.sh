@@ -5,21 +5,21 @@ set -euo pipefail
 # build-images.sh
 # -----------------------------------------------------------------------------
 # Builds Docker images based on a submodule pointing to another GitHub repo.
-# - Builds a "dev" image (master branch)
-# - Builds a "latest" and versioned image (latest tag)
 # Supports:
 #   --push         → push images to Docker Hub
 #   --only-dev     → build only the dev image
 #   --only-release → build only latest/version images
+#   --tag TAG      → explicitly specify tag (skip auto-detection)
 # -----------------------------------------------------------------------------
 
 # Default configuration
-SUBMODULE_PATH="excalidraw"     # relative path to submodule
+SUBMODULE_PATH="excalidraw"        # relative path to submodule
 IMAGE_NAME="pmoscode/excalidraw"   # Docker Hub image name
 DOCKERFILE="Dockerfile"            # path to Dockerfile relative to this repo
 PUSH=false
 ONLY_NIGHTLY=false
 ONLY_RELEASE=false
+SPECIFIED_TAG=""
 
 # -----------------------------------------------------------------------------
 # Helpers
@@ -35,11 +35,12 @@ while [[ $# -gt 0 ]]; do
     --push) PUSH=true ;;
     --only-nightly) ONLY_NIGHTLY=true ;;
     --only-release) ONLY_RELEASE=true ;;
+    --tag) SPECIFIED_TAG="$2"; shift ;;
     --submodule) SUBMODULE_PATH="$2"; shift ;;
     --image) IMAGE_NAME="$2"; shift ;;
     --dockerfile) DOCKERFILE="$2"; shift ;;
     -h|--help)
-      echo "Usage: $0 [--push] [--only-nightly|--only-release] [--submodule PATH] [--image NAME] [--dockerfile FILE]"
+      echo "Usage: $0 [--push] [--only-nightly|--only-release] [--tag TAG] [--submodule PATH] [--image NAME] [--dockerfile FILE]"
       exit 0
       ;;
     *) err "Unknown argument: $1" ;;
@@ -61,7 +62,7 @@ fi
 [[ -e "$SUBMODULE_PATH/.git" ]] || err "Submodule not found: $SUBMODULE_PATH"
 
 # -----------------------------------------------------------------------------
-# Determine repo state
+# Determine target tag (explicit or latest)
 # -----------------------------------------------------------------------------
 pushd "$SUBMODULE_PATH" >/dev/null
 
@@ -71,9 +72,18 @@ log "Current submodule ref: $ORIG_REF"
 git fetch --tags --quiet
 git fetch origin master --quiet || git fetch origin main --quiet
 
-LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
-[[ -n "$LATEST_TAG" ]] || err "No tags found in submodule repository."
-log "Latest tag detected: $LATEST_TAG"
+if [[ -n "$SPECIFIED_TAG" ]]; then
+  if git rev-parse "$SPECIFIED_TAG" >/dev/null 2>&1; then
+    LATEST_TAG="$SPECIFIED_TAG"
+    log "Using specified tag: $LATEST_TAG"
+  else
+    err "Specified tag '$SPECIFIED_TAG' not found in submodule."
+  fi
+else
+  LATEST_TAG=$(git tag --sort=-v:refname | head -n1)
+  [[ -n "$LATEST_TAG" ]] || err "No tags found in submodule repository."
+  log "Detected latest tag: $LATEST_TAG"
+fi
 
 popd >/dev/null
 
@@ -103,7 +113,7 @@ if ! $ONLY_NIGHTLY; then
   build_image "$LATEST_TAG"
   build_image "latest"
 
-  # Restore state
+  # Restore original state
   pushd "$SUBMODULE_PATH" >/dev/null
   git checkout "$ORIG_REF" >/dev/null 2>&1 || true
   popd >/dev/null
