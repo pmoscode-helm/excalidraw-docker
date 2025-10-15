@@ -83,7 +83,8 @@ jobs:
               TAG_REPO_TRIMMED="${TAG_REPO#v}"
               
               if dpkg --compare-versions "$TAG_REPO_TRIMMED" gt "$TAG_HUB_TRIMMED"; then
-              should_build=true
+                should_build=true
+              fi
             fi
           fi
 
