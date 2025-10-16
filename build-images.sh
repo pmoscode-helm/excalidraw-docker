@@ -127,18 +127,18 @@ fi
 # 2. Build nightly image (master branch)
 # -----------------------------------------------------------------------------
 if ! $ONLY_RELEASE; then
-  pushd "$SUBMODULE_PATH" >/dev/null
-  log "Checking out master for nightly build..."
-  git checkout master >/dev/null 2>&1 || git checkout main >/dev/null 2>&1
-  git pull --quiet origin master || git pull --quiet origin main
-  popd >/dev/null
+  #pushd "$SUBMODULE_PATH" >/dev/null
+  #log "Checking out master for nightly build..."
+  #git checkout master >/dev/null 2>&1 || git checkout main >/dev/null 2>&1
+  #git pull --quiet origin master || git pull --quiet origin main
+  #popd >/dev/null
 
   build_image "dev"
 
   # Restore original state
-  pushd "$SUBMODULE_PATH" >/dev/null
-  git checkout "$ORIG_REF" >/dev/null 2>&1 || true
-  popd >/dev/null
+  #pushd "$SUBMODULE_PATH" >/dev/null
+  #git checkout "$ORIG_REF" >/dev/null 2>&1 || true
+  #popd >/dev/null
 fi
 
 log "✅ Build process complete."
