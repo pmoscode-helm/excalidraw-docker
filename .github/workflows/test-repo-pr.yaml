@@ -37,6 +37,9 @@ jobs:
           echo "📋 Logs (last 20 lines):"
           docker logs --tail 20 wrapper-test || true
           
+          echo "‼️Run healthcheck"
+          docker exec wrapper-test wget http://localhost
+          
           echo "🧹 Cleanup..."
           docker stop wrapper-test || true
           docker rm wrapper-test || true
