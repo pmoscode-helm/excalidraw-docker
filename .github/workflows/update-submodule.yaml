@@ -52,6 +52,7 @@ jobs:
         if: steps.update.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
+          token: '${{ github.token }}'
           commit-message: "chore: update submodule to ${{
             steps.update.outputs.commit_sha
           }}"
@@ -60,3 +61,4 @@ jobs:
           branch: "auto/update-submodule"
           delete-branch: true
           labels: "ci,update"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
