@@ -1,0 +1,42 @@
+name: Test Repo PR
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-docker:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: pmoscode/excalidraw
+      DOCKERFILE: Dockerfile
+
+    steps:
+      - name: Checkout PR with submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Build Docker image
+        run: |
+          echo "🐳 Building Docker image for test..."
+          docker build -f "$DOCKERFILE" -t "${IMAGE_NAME}:test" .
+
+      - name: Run container for basic test
+        run: |
+          echo "🚀 Starting container for smoke test..."
+          docker run -d --name wrapper-test "${IMAGE_NAME}:test"
+          
+          sleep 5
+          
+          echo "🔍 Checking running state..."
+          docker ps --filter "name=wrapper-test"
+          
+          echo "📋 Logs (last 20 lines):"
+          docker logs --tail 20 wrapper-test || true
+          
+          echo "🧹 Cleanup..."
+          docker stop wrapper-test || true
+          docker rm wrapper-test || true

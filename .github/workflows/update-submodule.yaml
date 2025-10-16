@@ -1,0 +1,58 @@
+name: Update Submodule
+
+on:
+  schedule:
+    - cron: "0 4 * * *"  # täglich um 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-submodule:
+    runs-on: ubuntu-latest
+
+    env:
+      SUBMODULE_PATH: excalidraw
+      BRANCH: master
+
+    steps:
+      - name: Checkout repo with submodules
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Update submodule to latest commit
+        id: update
+        run: |
+          set -euo pipefail
+          cd "$SUBMODULE_PATH"
+          git fetch origin "$BRANCH" --quiet
+          LATEST_COMMIT=$(git rev-parse origin/"$BRANCH")
+          git checkout "$LATEST_COMMIT"
+          cd ..
+
+          if git diff --quiet "$SUBMODULE_PATH"; then
+            echo "✅ Submodule already up to date."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "📝 Submodule updated to commit $LATEST_COMMIT"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "commit_sha=$LATEST_COMMIT" >> "$GITHUB_OUTPUT"
+
+      - name: Create Pull Request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: update submodule to ${{
+            steps.update.outputs.commit_sha
+          }}"
+          title: "chore: update submodule"
+          body: "Automated submodule update to latest commit."
+          branch: "auto/update-submodule"
+          delete-branch: true
+          labels: "ci,update"
