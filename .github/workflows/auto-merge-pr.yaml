@@ -1,0 +1,52 @@
+name: Auto Merge Submodule PR
+
+on:
+  workflow_run:
+    workflows: ["Test Repo PR"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Download PR metadata
+        uses: actions/github-script@v7
+        id: pr
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const repo = run.repository.name;
+            const owner = run.repository.owner.login;
+
+            // Find PR, which belongs to this Workflow-Run
+            const prs = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              head: `${owner}:auto/update-submodule`
+            });
+
+            if (prs.data.length === 0) {
+              core.setFailed("Kein offener auto/update-submodule PR gefunden.");
+            } else {
+              const pr = prs.data[0];
+              console.log(`✅ Gefundener PR #${pr.number} von ${pr.user.login}`);
+              core.setOutput("pr_number", pr.number);
+              core.setOutput("pr_user", pr.user.login);
+            }
+
+      - name: Auto-merge if PR is from github-actions[bot]
+        if: steps.pr.outputs.pr_user == 'github-actions[bot]'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          pull-request-number: ${{ steps.pr.outputs.pr_number }}
+          merge-method: squash
+          token: '${{ github.token }}'
