@@ -28,10 +28,14 @@ jobs:
         id: update
         run: |
           set -euo pipefail
+          
           cd "$SUBMODULE_PATH"
+          
           git fetch origin "$BRANCH" --quiet
+          
           LATEST_COMMIT=$(git rev-parse origin/"$BRANCH")
           git checkout "$LATEST_COMMIT"
+          
           cd ..
 
           if git diff --quiet "$SUBMODULE_PATH"; then
