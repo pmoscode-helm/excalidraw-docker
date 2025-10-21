@@ -56,6 +56,7 @@ jobs:
           commit-message: "chore: update submodule to ${{
             steps.update.outputs.commit_sha
           }}"
+          committer: 'github-actions[bot] <github-actions[bot]@users.noreply.github.com>'
           title: "chore: update submodule"
           body: "Automated submodule update to latest commit."
           branch: "auto/update-submodule"
