@@ -2,7 +2,8 @@ name: Update Submodule
 
 on:
   schedule:
-    - cron: "0 4 * * *"  # täglich um 04:00 UTC
+    - cron: "0 4 * * *"
+    - cron: "40 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -52,7 +53,7 @@ jobs:
         if: steps.update.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          token: '${{ github.token }}'
+          token: '${{ secrets.RP_PAT }}'
           commit-message: "chore: update submodule to ${{
             steps.update.outputs.commit_sha
           }}"
