@@ -43,8 +43,8 @@ jobs:
               core.setOutput("pr_user", pr.user.login);
             }
 
-      - name: Auto-merge if PR is from github-actions[bot]
-        if: steps.pr.outputs.pr_user == 'github-actions[bot]'
+      - name: Auto-merge if PR is from pmoscode
+        if: steps.pr.outputs.pr_user == 'pmoscode'
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           pull-request-number: ${{ steps.pr.outputs.pr_number }}
