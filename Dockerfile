@@ -12,7 +12,7 @@ ARG NODE_ENV=production
 
 RUN yarn build:app:docker
 
-FROM nginx:1.29-alpine
+FROM nginx:1.30-alpine
 
 ENV APP_WS_OLD_SERVER_URL="https://oss-collab.excalidraw.com"
 ENV APP_WS_NEW_SERVER_URL="http://localhost:3002"
