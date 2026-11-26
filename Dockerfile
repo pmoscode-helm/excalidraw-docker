@@ -1,5 +1,8 @@
 FROM node:26 AS build
 
+# Node >= 25 images no longer ship yarn/corepack
+RUN npm install -g yarn@1.22.22
+
 WORKDIR /opt/node_app
 
 COPY ./excalidraw .
